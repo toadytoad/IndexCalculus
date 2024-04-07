@@ -8,10 +8,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 public class Server {
     public Queue<Task> results = new ArrayDeque<>();
@@ -48,10 +45,10 @@ public class Server {
         ConnectionHandler handler = new ConnectionHandler(this);
         handler.start();
         long start = 0;
-        long increment = 10000;
+        long increment = 100000;
         long numRelations = 0;
         System.out.println("Server starting tasks loop");
-        while(numRelations<500){
+        while(numRelations<1000){
             Thread.sleep(100);
             //System.out.println(results.isEmpty());
             if(results.isEmpty()&&!clients.isEmpty()){
@@ -60,6 +57,7 @@ public class Server {
                         if (c.tasks.isEmpty()) {
                             System.out.println("Server waiting for lock");
                             synchronized (c.lock) {
+                                System.out.println("Server obtained lock");
                                 c.tasks.add(new RelationsTask(p, g, factorBase, start, start + increment));
                                 start += increment;
                             }
@@ -84,6 +82,19 @@ public class Server {
                 }
             }
         }
+        System.out.println("Sent kill tasks");
+        while(true){
+            Thread.sleep(200);
+            synchronized (clientLock){
+                if(clients.isEmpty()) break;
+            }
+        }
+        System.out.println("Clients finished");
+        serverSocket.close();
+        System.out.println("Finished!");
+        for(Thread t : Thread.getAllStackTraces().keySet()){
+            System.out.println(t);
+        }
     }
     static class ConnectionHandler extends Thread{
         Server server;
@@ -94,7 +105,7 @@ public class Server {
 
         public void run(){
             int id = 0;
-            while(true){
+            while(!server.serverSocket.isClosed()){
                 try {
                     Socket connection = server.serverSocket.accept();
                     synchronized (server.clientLock) {

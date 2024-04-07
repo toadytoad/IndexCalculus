@@ -2,6 +2,7 @@ package server;
 
 import client.packet.ClientHello;
 import client.packet.ClientKill;
+import client.packet.KillAcknowledge;
 
 import java.io.*;
 import java.net.Socket;
@@ -60,21 +61,27 @@ public class ClientHandler extends Thread{
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if(available>0){
-                if(!tasks.isEmpty()){
+            if(available>0&&!tasks.isEmpty()){
                     System.out.println("Waiting for lock");
                     synchronized (lock) {
                         System.out.println("Sending task");
+                        System.out.println(tasks.peek().getClass().toString());
                         writeObject(tasks.poll());
                     }
                     available--;
-                }
             } else {
-                
+
                 Object o = readObject();
+                System.out.println(o.getClass().toString());
                 if (o instanceof ClientKill) {
+                    System.out.println("Killing!");
                     synchronized (server.clientLock) {
                         server.clients.remove(this);
+                    }
+                    try {
+                        out.writeObject(new KillAcknowledge());
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     break;
                 } else if (o instanceof Task) {
@@ -83,13 +90,13 @@ public class ClientHandler extends Thread{
                         server.results.add((Task) o);
                         available += 1;
                     }
+                    System.out.println("Freed server lock");
                 }
 
             }
         }
 
-
-
+        System.out.println("Finished Client "+id);
     }
 
     private Object readObject(){
