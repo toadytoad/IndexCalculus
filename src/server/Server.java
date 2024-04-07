@@ -1,5 +1,6 @@
 package server;
 
+import client.packet.ClientKill;
 import relations.PartialRelation;
 import relations.RelationsTask;
 
@@ -52,6 +53,7 @@ public class Server {
         System.out.println("Server starting tasks loop");
         while(numRelations<500){
             Thread.sleep(100);
+            //System.out.println(results.isEmpty());
             if(results.isEmpty()&&!clients.isEmpty()){
                 synchronized (clientLock) {
                     for (ClientHandler c : clients) {
@@ -66,8 +68,19 @@ public class Server {
                 }
             } else if (!results.isEmpty()){
                 //TODO actually handle the relations here
+                System.out.println("Got a result");
                 synchronized (lock) {
                     numRelations += ((RelationsTask) results.poll()).res.fullRelations.size();
+                }
+                System.out.println(numRelations+" relations.");
+            }
+
+        }
+        synchronized (clientLock){
+            for(ClientHandler c : clients){
+                synchronized (c.lock) {
+                    c.tasks.clear();
+                    c.tasks.add(new KillTask());
                 }
             }
         }

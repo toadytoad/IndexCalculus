@@ -1,6 +1,8 @@
 package client.packet;
 
-public class ClientHello {
+import java.io.Serializable;
+
+public class ClientHello implements Serializable {
     public String auth;
     public int cores;
 

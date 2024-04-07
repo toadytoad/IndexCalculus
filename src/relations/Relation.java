@@ -1,9 +1,9 @@
 package relations;
 
 
-import java.math.BigInteger;
+import java.io.Serializable;
 
-public class Relation {
+public class Relation implements Serializable {
     public long exp;
     public int[] relations;
 

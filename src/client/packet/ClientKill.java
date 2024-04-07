@@ -1,6 +1,8 @@
 package client.packet;
 
-public class ClientKill {
+import java.io.Serializable;
+
+public class ClientKill implements Serializable {
     private static final ClientKill kill = new ClientKill();
 
     private ClientKill(){}

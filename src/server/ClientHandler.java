@@ -55,6 +55,11 @@ public class ClientHandler extends Thread{
         System.out.println("Obtained params");
         available = workers;
         while(true){
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             if(available>0){
                 if(!tasks.isEmpty()){
                     System.out.println("Waiting for lock");
@@ -64,28 +69,25 @@ public class ClientHandler extends Thread{
                     }
                     available--;
                 }
-            }
-            try {
-                if(in.available()>0){ //TODO add an exit sequence here.
-                    Object o = readObject();
-                    if(o instanceof ClientKill){
-                        synchronized (server.clientLock){
-                            server.clients.remove(this);
-                        }
-                        break;
+            } else {
+                
+                Object o = readObject();
+                if (o instanceof ClientKill) {
+                    synchronized (server.clientLock) {
+                        server.clients.remove(this);
                     }
-                    else if(o instanceof Task) {
-                        synchronized (server.lock) {
-                            server.results.add((Task) o);
-                            available += 1;
-                        }
+                    break;
+                } else if (o instanceof Task) {
+                    System.out.println("Recieved Task on client " + id);
+                    synchronized (server.lock) {
+                        server.results.add((Task) o);
+                        available += 1;
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
+
             }
         }
-        
+
 
 
     }

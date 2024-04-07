@@ -1,6 +1,10 @@
 package client;
 
+import client.packet.ClientHello;
+import client.packet.ClientKill;
 import relations.RelationsTask;
+import server.KillTask;
+import server.Task;
 
 import java.io.*;
 import java.net.Socket;
@@ -10,15 +14,23 @@ public class Client {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         Socket clientSocket = new Socket("127.0.0.1", 26979);
-        PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-        BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        assert in.readLine().equals("Hello");
-        out.write("mysupersecurepassword\n1\n");
-        out.flush();
-        ObjectInputStream stream = new ObjectInputStream(clientSocket.getInputStream());
-        stream.skip(6);
-        RelationsTask task = (RelationsTask)(new ObjectInputStream(clientSocket.getInputStream()).readObject());
-        task.runTask();
+        ObjectOutputStream out = new ObjectOutputStream(clientSocket.getOutputStream());
+        ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
+        ClientHello hello = new ClientHello("mysupersecurepassword", 1);
+        out.writeObject(hello);
+        for(;;) {
+            Task task = (Task) (in.readObject());
+            if(task instanceof KillTask){
+                break;
+            } else if (task instanceof RelationsTask) {
+                task.runTask();
+                System.out.println("Finished Task");
+                System.out.println(((RelationsTask)task).res.fullRelations.size());
+                out.writeObject(task);
+                out.flush();
+            }
+        }
+        out.writeObject(ClientKill.getKill());
 
     }
 }

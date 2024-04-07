@@ -1,8 +1,9 @@
 package relations;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 
-public class PartialRelation {
+public class PartialRelation implements Serializable {
     public long exp;
     public int[] relations;
     public int extra;
